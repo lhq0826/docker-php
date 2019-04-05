@@ -1,0 +1,157 @@
+# 注意这里的vertion是docker-compose yaml格式的version 不同的version支持不同的语法
+version: '3'
+services:
+    nginx:
+        # 依赖关系 先跑php
+        depends_on:
+            - php
+        #image: nginx:${NGINX_VERSION}
+        build: nginx/
+        # 数据卷
+        volumes:
+            - ${LOCAL_STOARGE_PATH}/nginx/conf.d:/etc/nginx/conf.d:ro
+            # 证书挂载保存，需要用的时候，进容器执行 sh /usr/local/bin/docker-make-ssl.sh，然后cp -R /etc/nginx/ssl /etc/nginx/ca
+            - ${LOCAL_STOARGE_PATH}/nginx/ca:/etc/nginx/ca
+            - ${LOCAL_STOARGE_PATH}/nginx/my_modules:/etc/nginx/my_modules:ro
+            - ${LOCAL_WEB_PATH}:/works
+        # 端口映射
+        ports:
+            - 80:80
+            - 443:443
+        # ip地址
+        networks:
+            extnetwork:
+                ipv4_address: 172.29.0.3
+
+        # 容器名称
+        container_name: nginx
+        #restart: always
+    php:
+        build: php/
+        volumes:
+            - ${LOCAL_WEB_PATH}:/works:cached
+            - ${LOCAL_STOARGE_PATH}/php/ext:/etc/php/my_ext
+            - ${LOCAL_STOARGE_PATH}/php/php.ini:/usr/local/etc/php/php.ini:ro
+        networks:
+            extnetwork:
+                ipv4_address: 172.29.0.2
+        container_name: php
+        #restart: always
+#    es_n1:
+#        image: daocloud.io/library/elasticsearch:${ELASTIC_VERSION}
+#        #hostname: "{{.Node.Hostname}}-es_n1"
+#        environment:
+#            - TZ=Asia/Shanghai
+#            #- discovery.zen.ping.unicast.hosts=elasticsearch
+#            #- discovery.zen.minimum_master_nodes=1
+#            #- ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+#            - xpack.security.http.ssl.enabled=false
+#            - xpack.security.transport.ssl.enabled=false
+#            - xpack.security.enabled=false
+#            # - xpack.license.self_generated.type=trial
+#            - xpack.watcher.enabled=false
+#            - xpack.monitoring.enabled=false
+#            - cluster.name=DevOps
+#            - node.name=es_n1
+#            - network.host=0.0.0.0
+#            - http.cors.enabled=true
+#            - http.cors.allow-origin="*"
+#            - bootstrap.memory_lock=true
+#            # 设置elasticsearch服务的java虚拟机内存使用
+#            - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+#            # ES_JVM_OPTIONS仅最es 5.3.x有效
+#            # - "ES_JVM_OPTIONS=-Xms512m -Xmx512m"
+#            # - discovery.type="single-node"
+#        ulimits:
+#            memlock:
+#                soft: -1
+#                hard: -1
+#            nproc: 65535
+#            # 系统文件句柄打开数量限制
+#            nofile:
+#                soft: 65536
+#                hard: 65536
+#        # cap_add:
+#        #     - IPC_LOCK
+#        volumes:
+#            - ${LOCAL_STOARGE_PATH}/elasticsearch/es_n1/data:/usr/share/elasticsearch/data
+#            # 默认注释下面2行，如果需要下次启动前限制内存大小，请删除下面2行注释.
+#            #- ${LOCAL_STOARGE_PATH}/elasticsearch/es_n1/config/elasticsearch.yml:/etc/elasticsearch/elasticsearch.yml
+#            #- ${LOCAL_STOARGE_PATH}/elasticsearch/es_n1/config/jvm.options:/etc/elasticsearch/jvm.options
+#        ports:
+#            - 9200:9200
+#            - 9300:9300
+#        container_name: es_n1
+        #restart: always
+    # MySQL数据库
+    mysql:
+        image: mysql:${MYSQL_VERSION}
+        command: --max_allowed_packet=20971520
+        # 配置环境变量
+        environment:
+            MYSQL_USER: root
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+            MYSQL_ROOT_HOST: "%"
+        ports:
+            - 3306:3306
+        volumes:
+            # mysql 配置文件
+            - ${LOCAL_STOARGE_PATH}/mysql/conf.d:/etc/mysql/conf.d:ro
+            # mysql 配置文件
+            - ${LOCAL_STOARGE_PATH}/mysql/mysql.conf.d:/etc/mysql/mysql.conf.d:ro
+            # mysql 数据库
+            - ${LOCAL_STOARGE_PATH}/mysql/db:/var/lib/mysql
+            # mysql 日志
+            - ${LOCAL_STOARGE_PATH}/mysql/logs:/var/log/mysql
+        # ip地址
+        networks:
+            extnetwork:
+                ipv4_address: 172.29.0.4
+        container_name: mysql
+        #restart: always
+    redis:
+        image: redis:${REDIS_VERSION}
+        volumes:
+            # redis 配置文件
+            - ${LOCAL_STOARGE_PATH}/redis/conf.d/redis.conf:/etc/redis/redis.conf:ro
+            # redis 持久化数据存储
+            - ${LOCAL_STOARGE_PATH}/redis/db:/data/redis
+            # 以配置文件启动 redis
+        ports:
+            - 6379:6379
+        container_name: redis
+        #restart: always
+    # Beanstalk Server
+#    beanstalk:
+#        build: beanstalk/
+#        environment:
+#            - TZ=Asia/Shanghai
+#            - BEANSTALKD_VERSION=${BEANSTALKD_VERSION}
+#            - BEANSTALKD_PORT=${BEANSTALKD_PORT}
+#            - BEANSTALKD_ADDR=${BEANSTALKD_ADDR}
+#            - BEANSTALKD_MAX_JOB_SIZE=${BEANSTALKD_MAX_JOB_SIZE}
+#        ports:
+#            - 11300:${BEANSTALKD_PORT}
+#            - 3000:3000
+#        volumes:
+#            - ${LOCAL_STOARGE_PATH}/beanstalk/data/beanstalkd/:/data/beanstalkd/
+#            - ${LOCAL_STOARGE_PATH}/beanstalk/aurora/conf/:/usr/local/aurora/conf/:cached
+#        container_name: beanstalk
+       #restart: always
+    #mongo:
+#        image: mongo:latest
+#        volumes: 
+#            # Windows 磁盘是NTFS/FAT32，不支持Ext4大文件，不能挂载，需要注释下行， Windows下无解
+#            #- ${LOCAL_STOARGE_PATH}/mongo/db:/data/db
+#            - ${LOCAL_STOARGE_PATH}/mongo/logs:/var/log/mongodb
+#        ports: 
+#            - 27017:27017
+#        container_name: mongo
+        #restart: always
+
+networks:
+    extnetwork:
+        ipam:
+            driver: default
+            config:
+                - subnet: 172.29.0.0/24
