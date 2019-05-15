@@ -31,6 +31,7 @@ services:
         volumes:
             - ${LOCAL_WEB_PATH}:/works:cached
             - ${LOCAL_STOARGE_PATH}/php/ext:/etc/php/my_ext
+            - ${LOCAL_STOARGE_PATH}/php/ext/ini/molten.ini:/usr/local/etc/php/conf.d/docker-php-ext-molten.ini
             - ${LOCAL_STOARGE_PATH}/php/php.ini:/usr/local/etc/php/php.ini:ro
         networks:
             extnetwork:
