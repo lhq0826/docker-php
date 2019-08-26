@@ -47,6 +47,7 @@ RUN apt-get update -y && \
     libsqlite3-0 \
     tmux \
     keychain \
+    cron \
     && rm -rf /var/lib/apt/lists/*
 
 # 替换VIM鼠标状态为非可视状态
@@ -135,6 +136,10 @@ RUN curl -sS https://install.phpcomposer.com/installer | php \
 
 # 对Seaslog默认存储目录增加www-data owner && 对Php默认bash登陆目录赋予www-data:www-data owner
 #RUN chown -R www-data:www-data /var/log/www && chown -R www-data:www-data /var/www
+
+# install nodejs
+RUN curl -sL https://deb.nodesource.com/setup_6.x | bash - \
+    && apt-get install -y nodejs
 
 EXPOSE 9000
 CMD ["php-fpm"]

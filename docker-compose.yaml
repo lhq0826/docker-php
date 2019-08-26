@@ -16,6 +16,7 @@ services:
             - ${LOCAL_WEB_PATH}:/works
         # 端口映射
         ports:
+            - 8081:8081
             - 80:80
             - 443:443
         # ip地址
