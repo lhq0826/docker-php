@@ -3,7 +3,7 @@ FROM php:7.2-fpm
 LABEL maintainer="ninja911<ninja911@qq.com>"
 
 ENV TIMEZONE Asia/Shanghai
-ENV SWOOLE_VERSION 4.0.3
+ENV SWOOLE_VERSION 4.4.15
 ENV PHALCON_VERSION 3.4.1
 
 # replace sources.list
@@ -59,17 +59,18 @@ ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8
 
 # install hiredis
-RUN wget --no-check-certificate https://gitee.com/oschina/hiredis/repository/archive/v0.13.3.zip -O hiredis.zip \
-    && mkdir -p hiredis \
+RUN wget --no-check-certificate https://github.com/redis/hiredis/archive/v0.13.3.zip -O hiredis.zip \
+#RUN wget --no-check-certificate https://gitee.com/oschina/hiredis/repository/archive/v0.13.3.zip -O hiredis.zip \
+    && mkdir -p hiredis-0.13.3 \
     && unzip hiredis.zip \
     && rm hiredis.zip \
     && ( \
-        cd hiredis \
+        cd hiredis-0.13.3 \
         && make -j$(nproc) \
         && make install \
         && ldconfig \
     ) \
-    && rm -r hiredis
+    && rm -r hiredis-0.13.3
 
 # install php extentions
 RUN pecl channel-update pecl.php.net \
@@ -96,8 +97,8 @@ RUN pecl channel-update pecl.php.net \
     && docker-php-ext-enable inotify \
     && pecl install grpc \
     && docker-php-ext-enable grpc \
-    && echo "no\r\/usr/local/php-event/\ryes"|pecl install event \
-    && docker-php-ext-enable event \
+#    && echo "no\r\/usr/local/php-event/\ryes"|pecl install event \
+#    && docker-php-ext-enable event \
     && pecl clear-cache
 
 # install phalcon extention
