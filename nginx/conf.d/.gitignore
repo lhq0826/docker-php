@@ -2,3 +2,4 @@
 !.gitignore
 !*.cfg
 !nginx.default
+!proxy_pass.default

@@ -119,6 +119,9 @@ services:
             # redis 持久化数据存储
             - ${LOCAL_STOARGE_PATH}/redis/db:/data/redis
             # 以配置文件启动 redis
+        networks:
+            extnetwork:
+                ipv4_address: 172.29.0.5
         ports:
             - 6379:6379
         container_name: redis
